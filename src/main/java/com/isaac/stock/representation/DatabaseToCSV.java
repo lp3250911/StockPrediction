@@ -19,7 +19,7 @@ public class DatabaseToCSV {
 
         // CSV文件路径
         String csvFile = "inputdata_predict.csv";
-        String str_sql="SELECT trade_date,  ts_code ,  open , close,low ,high, vol  FROM `"+stockname+"` order by 'trade_date' desc ";
+        String str_sql="SELECT trade_date,  ts_code ,  open , close,low ,high, vol  FROM `"+stockname+"` order by trade_date desc ";
 
         // 使用try-with-resources确保资源正确关闭
         try (
