@@ -27,14 +27,14 @@ public class StockPricePrediction {
 
     private static final Logger log = LoggerFactory.getLogger(StockPricePrediction.class);
 
-    private static int exampleLength = 22; // time series length, assume 22 working days per month
+    private static int exampleLength = 5; // time series length, assume 22 working days per month
 
     public static void main (String[] args) throws IOException {
-        String file = new ClassPathResource("prices-split-adjusted.csv").getFile().getAbsolutePath();
-        String symbol = "GOOG"; // stock name
+        String file = new ClassPathResource("inputdata_predict.csv").getFile().getAbsolutePath();
+        String symbol = "超大盘ETF"; // stock name
         int batchSize = 64; // mini-batch size
         double splitRatio = 0.9; // 90% for training, 10% for testing
-        int epochs = 100; // training epochs
+        int epochs = 44; // training epochs
 
         log.info("Create dataSet iterator...");
         PriceCategory category = PriceCategory.CLOSE; // CLOSE: predict close price
@@ -83,7 +83,19 @@ public class StockPricePrediction {
         }
         log.info("Print out Predictions and Actual Values...");
         log.info("Predict,Actual");
-        for (int i = 0; i < predicts.length; i++) log.info(predicts[i] + "," + actuals[i]);
+        for (int i = 0; i < predicts.length; i++) {
+            int fh1=0;
+
+            if(i>0){
+                if((predicts[i]>predicts[i-1] && actuals[i]>actuals[i-1]) ||(predicts[i]<predicts[i-1] && actuals[i]<actuals[i-1])) {
+                    fh1=1;
+                }else {
+                    fh1=2;
+                }
+
+            }
+            log.info(predicts[i] + "," + actuals[i]+ "," + fh1);
+        }
         log.info("Plot...");
         PlotUtil.plot(predicts, actuals, String.valueOf(category));
     }

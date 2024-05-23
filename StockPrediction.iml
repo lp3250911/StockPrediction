@@ -255,5 +255,6 @@
     <orderEntry type="library" name="Maven: org.liquibase:liquibase-core:4.9.1" level="project" />
     <orderEntry type="library" name="Maven: javax.xml.bind:jaxb-api:2.3.0" level="project" />
     <orderEntry type="library" name="Python 27 interpreter library" level="application" />
+    <orderEntry type="library" name="mysql-connector-java-5.1.25-bin" level="project" />
   </component>
 </module>

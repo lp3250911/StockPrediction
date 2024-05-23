@@ -8,18 +8,33 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
+import static liquibase.util.StringUtil.isNumeric;
+
+
 public class DatabaseToCSV {
+    static String url = "jdbc:mysql://127.0.0.1:3306/akshare";
+    static String user = "root";
+    static String password = "Root";
 
     public static void main(String[] args) {
+        getStocksData("sh510020");
+
+    }
+
+    public static void getStocksData(String stockname) {
         // 数据库连接配置
-        String url = "jdbc:mysql://localhost:3306/tushare";
-        String user = "root";
-        String password = "Root@1234";
-        String stockname="603259.sh";
+
+//        String stockname="688511";
 
         // CSV文件路径
-        String csvFile = "inputdata_predict.csv";
-        String str_sql="SELECT trade_date,  ts_code ,  open , close,low ,high, vol  FROM `"+stockname+"` order by trade_date desc ";
+        String csvFile = "src/main/resources/inputdata_predict.csv";
+        String str_sql="";
+        if(isNumeric(stockname)){
+            str_sql="SELECT 日期, 代码,  开盘 , 收盘,最低 ,最高, 换手率  FROM `"+stockname+"` order by 日期 asc ";
+        }else{
+            str_sql="SELECT date , 名称,  open, close,low ,high, volume  FROM `"+stockname+"` order by date asc ";
+        }
+
 
         // 使用try-with-resources确保资源正确关闭
         try (
@@ -32,20 +47,30 @@ public class DatabaseToCSV {
             // 写入标题行date,symbol,open,close,low,high,volume
             String[] headers = {"date", "symbol", "open","close","low","high","volume"}; // 根据实际情况修改
             csvWriter.writeNext(headers);
-
+            String[] data=new String[7];
+            String str_temp="";
             // 写入数据行
             while (resultSet.next()) {
-                String str_temp=resultSet.getString("trade_date").split(" ")[0];
-                String[] data = {
-                        str_temp,
-//                        resultSet.getString("trade_date"),
-                        resultSet.getString("ts_code"),
-                        resultSet.getString("open"),
-                        resultSet.getString("close"),
-                        resultSet.getString("low"),
-                        resultSet.getString("high"),
-                        resultSet.getString("vol")
-                };
+                if(isNumeric(stockname)){
+                    str_temp= resultSet.getString("日期").split(" ")[0];
+                    data[0] = str_temp;
+                    data[1] = resultSet.getString("代码");
+                    data[2] = resultSet.getString("开盘");
+                    data[3] = resultSet.getString("收盘");
+                    data[4] = resultSet.getString("最低");
+                    data[5] = resultSet.getString("最高");
+                    data[6] = resultSet.getString("换手率");
+                }else{
+                    str_temp = resultSet.getString("date").split(" ")[0];
+                    data[0] = str_temp;
+                    data[1] = resultSet.getString("名称");
+                    data[2] = resultSet.getString("open");
+                    data[3] = resultSet.getString("close");
+                    data[4] = resultSet.getString("low");
+                    data[5] = resultSet.getString("high");
+                    data[6] = resultSet.getString("volume");
+                }
+
                 csvWriter.writeNext(data);
             }
 //            csvWriter.close();
