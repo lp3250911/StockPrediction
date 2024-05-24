@@ -3,7 +3,9 @@ package com.isaac.stock.predict;
 import com.isaac.stock.model.RecurrentNets;
 import com.isaac.stock.representation.PriceCategory;
 import com.isaac.stock.representation.StockDataSetIterator;
+import com.isaac.stock.representation.DatabaseToCSV;
 import com.isaac.stock.utils.PlotUtil;
+import com.opencsv.CSVWriter;
 import javafx.util.Pair;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.util.ModelSerializer;
@@ -12,11 +14,18 @@ import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.io.ClassPathResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.alibaba.fastjson.JSONObject;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.*;
 import java.util.List;
 import java.util.NoSuchElementException;
+
+import static java.lang.Math.abs;
+import static liquibase.util.StringUtil.isNumeric;
+
 
 /**
  * Created by zhanghao on 26/7/17.
@@ -24,14 +33,51 @@ import java.util.NoSuchElementException;
  * @author ZHANG HAO
  */
 public class StockPricePrediction {
+    static String url = "jdbc:mysql://127.0.0.1:3306/akshare";
+    static String user = "root";
+    static String password = "Root";
+    private static double co1=0;
+    private static double co2=0;
+    private static double[] data1=new double[100];
+    private static double[] data2=new double[100];
+
 
     private static final Logger log = LoggerFactory.getLogger(StockPricePrediction.class);
 
     private static int exampleLength = 5; // time series length, assume 22 working days per month
 
-    public static void main (String[] args) throws IOException {
+    public static void main (String[] args) throws IOException, SQLException {
+
+
+        String sql_str="SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'akshare'";
+        try (
+                Connection conn = DriverManager.getConnection(url, user, password);
+                Statement statement = conn.createStatement();
+                ResultSet resultSet = statement.executeQuery(sql_str);
+        ) {
+            while (resultSet.next()) {
+                String stockname=resultSet.getString("TABLE_NAME");
+
+//                if(isNumeric(stockname)){
+//                    predict_run(stockname);
+
+//                }else{
+                    predict_run(stockname);
+//                }
+            }
+
+        }
+
+
+    }
+
+    private static void predict_run(String stockname) throws IOException {
         String file = new ClassPathResource("inputdata_predict.csv").getFile().getAbsolutePath();
-        String symbol = "超大盘ETF"; // stock name
+
+        String symbol = stockname; // stock name
+        DatabaseToCSV databaseToCSV=new DatabaseToCSV();
+        JSONObject jSONObject=databaseToCSV.getStocksData(symbol);
+
         int batchSize = 64; // mini-batch size
         double splitRatio = 0.9; // 90% for training, 10% for testing
         int epochs = 44; // training epochs
@@ -74,9 +120,10 @@ public class StockPricePrediction {
     }
 
     /** Predict one feature of a stock one-day ahead */
-    private static void predictPriceOneAhead (MultiLayerNetwork net, List<Pair<INDArray, INDArray>> testData, double max, double min, PriceCategory category) {
+    private static JSONObject predictPriceOneAhead (MultiLayerNetwork net, List<Pair<INDArray, INDArray>> testData, double max, double min, PriceCategory category) {
         double[] predicts = new double[testData.size()];
         double[] actuals = new double[testData.size()];
+        JSONObject jSONObject=new JSONObject();
         for (int i = 0; i < testData.size(); i++) {
             predicts[i] = net.rnnTimeStep(testData.get(i).getKey()).getDouble(exampleLength - 1) * (max - min) + min;
             actuals[i] = testData.get(i).getValue().getDouble(0);
@@ -89,15 +136,30 @@ public class StockPricePrediction {
             if(i>0){
                 if((predicts[i]>predicts[i-1] && actuals[i]>actuals[i-1]) ||(predicts[i]<predicts[i-1] && actuals[i]<actuals[i-1])) {
                     fh1=1;
+                    co1=co1+1;
                 }else {
                     fh1=2;
+                    co2=co2+1;
                 }
 
             }
             log.info(predicts[i] + "," + actuals[i]+ "," + fh1);
+            data1[i]=predicts[i];
+            data2[i]=actuals[i];
         }
-        log.info("Plot...");
-        PlotUtil.plot(predicts, actuals, String.valueOf(category));
+//        log.info("Plot...");
+//        PlotUtil.plot(predicts, actuals, String.valueOf(category));
+        jSONObject.put("results",data1);
+        jSONObject.put("correctness",(co1/(co1+co2)));
+        spearman sp_cal = new spearman(data1, data2);
+        jSONObject.put("similarity",sp_cal.getR());
+        co1=0;
+        co2=0;
+        data1=new double[100];
+        data2=new double[100];
+
+        return jSONObject;
+
     }
 
     private static void predictPriceMultiple (MultiLayerNetwork net, List<Pair<INDArray, INDArray>> testData, double max, double min) {

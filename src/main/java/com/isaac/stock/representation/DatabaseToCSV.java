@@ -1,6 +1,7 @@
 package com.isaac.stock.representation;
 
 import com.opencsv.CSVWriter;
+import com.alibaba.fastjson.JSONObject;
 
 import java.io.FileWriter;
 import java.sql.Connection;
@@ -16,21 +17,20 @@ public class DatabaseToCSV {
     static String user = "root";
     static String password = "Root";
 
-    public static void main(String[] args) {
-        getStocksData("sh510020");
 
-    }
 
-    public static void getStocksData(String stockname) {
+    public JSONObject getStocksData(String stockname) {
         // 数据库连接配置
 
 //        String stockname="688511";
+        JSONObject jSONObject=new JSONObject();
+
 
         // CSV文件路径
         String csvFile = "src/main/resources/inputdata_predict.csv";
         String str_sql="";
         if(isNumeric(stockname)){
-            str_sql="SELECT 日期, 代码,  开盘 , 收盘,最低 ,最高, 换手率  FROM `"+stockname+"` order by 日期 asc ";
+            str_sql="SELECT 日期, 代码,  开盘 , 收盘,最低 ,最高, 换手率,名称  FROM `"+stockname+"` order by 日期 asc ";
         }else{
             str_sql="SELECT date , 名称,  open, close,low ,high, volume  FROM `"+stockname+"` order by date asc ";
         }
@@ -40,7 +40,6 @@ public class DatabaseToCSV {
         try (
                 Connection conn = DriverManager.getConnection(url, user, password);
                 Statement statement = conn.createStatement();
-
                 ResultSet resultSet = statement.executeQuery(str_sql);
                 CSVWriter csvWriter = new CSVWriter(new FileWriter(csvFile), ',', CSVWriter.NO_QUOTE_CHARACTER);
         ) {
@@ -72,10 +71,16 @@ public class DatabaseToCSV {
                 }
 
                 csvWriter.writeNext(data);
+
             }
+
+            jSONObject.put("date",data[0]);
+            jSONObject.put("name",data[1]);
+
 //            csvWriter.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return jSONObject;
     }
 }

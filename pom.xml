@@ -118,6 +118,17 @@
             <artifactId>guava</artifactId>
             <version>33.0.0-jre</version>
         </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.83</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/net.sf.jsci/jsci -->
+        <dependency>
+            <groupId>net.sf.jsci</groupId>
+            <artifactId>jsci</artifactId>
+            <version>1.2</version>
+        </dependency>
     </dependencies>
 
     <build>
