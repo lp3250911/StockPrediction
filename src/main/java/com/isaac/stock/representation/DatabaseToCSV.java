@@ -27,7 +27,8 @@ public class DatabaseToCSV {
 
 
         // CSV文件路径
-        String csvFile = "src/main/resources/inputdata_predict.csv";
+        String csvFile = "E:/lipei/use/lstm/temp/inputdata_predict"+stockname+".csv";
+//        String csvFile = "src/main/resources/inputdata_predict"+stockname+".csv";
         String str_sql="";
         if(isNumeric(stockname)){
             str_sql="SELECT 日期, 代码,  开盘 , 收盘,最低 ,最高, 换手率,名称  FROM `"+stockname+"` order by 日期 asc ";

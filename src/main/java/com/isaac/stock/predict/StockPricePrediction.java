@@ -64,20 +64,23 @@ public class StockPricePrediction {
 //
                 String sql_insert ="INSERT INTO ansys_results (`code`, `name`,`results`,`correctness`, `similarity` ) VALUES ('"+stockname+"','"+ jSONObject.get("name")+"','"+ str_res+"','"+ jSONObject.get("correctness")+"','"+ jSONObject.get("similarity")+"')";
 ////                String sql_insert ="INSERT INTO ansys_results (`code`, `name`,`results`,`correctness`, `similarity` ) VALUES ('"+stockname+"','"+ jSONObject.get("name")+"','"+ jSONObject.get("results")+"','"+ jSONObject.get("correctness")+"','"+ jSONObject.get("similarity")+"')";
-//                statement.execute(sql_insert);
+                statement.execute(sql_insert);
             }
 
 
 
 
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
 
     }
 
-    private static JSONObject predict_run(String stockname) throws IOException {
-        String file = new ClassPathResource("inputdata_predict.csv").getFile().getAbsolutePath();
-
+    private static JSONObject predict_run(String stockname) throws IOException, InterruptedException {
+//        String file = new ClassPathResource("inputdata_predict.csv").getFile().getAbsolutePath();
+//        String file = new ClassPathResource("inputdata_predict"+stockname+".csv").getFile().getAbsolutePath();
+        String file ="E:/lipei/use/lstm/temp/inputdata_predict"+stockname+".csv";
         String symbol = stockname; // stock name
         DatabaseToCSV databaseToCSV = new DatabaseToCSV();
         JSONObject jSONObject = databaseToCSV.getStocksData(symbol);
@@ -89,6 +92,7 @@ public class StockPricePrediction {
         int epochs = 44; // training epochs
 
         log.info("Create dataSet iterator...");
+//        Thread.sleep(10000);
         PriceCategory category = PriceCategory.CLOSE; // CLOSE: predict close price
         StockDataSetIterator iterator = new StockDataSetIterator(file, symbol, batchSize, exampleLength, splitRatio, category);
         log.info("Load test dataset...");
@@ -160,7 +164,8 @@ public class StockPricePrediction {
         }
 //        log.info("Plot...");
 //        PlotUtil.plot(predicts, actuals, String.valueOf(category));
-        jSONObject.put("results", data1);
+        jSONObject.put("Predictions", data1);
+        jSONObject.put("Actual", data2);
         jSONObject.put("correctness", (co1 / (co1 + co2)));
         spearman sp_cal = new spearman(data1, data2);
         jSONObject.put("similarity", sp_cal.getR());
