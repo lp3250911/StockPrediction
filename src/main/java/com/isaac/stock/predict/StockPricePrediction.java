@@ -5,26 +5,22 @@ import com.isaac.stock.representation.PriceCategory;
 import com.isaac.stock.representation.StockDataSetIterator;
 import com.isaac.stock.representation.DatabaseToCSV;
 import com.isaac.stock.utils.PlotUtil;
-import com.opencsv.CSVWriter;
 import javafx.util.Pair;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.linalg.io.ClassPathResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.alibaba.fastjson.JSONObject;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.*;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import static java.lang.Math.abs;
-import static liquibase.util.StringUtil.isNumeric;
 
 
 /**
@@ -47,44 +43,46 @@ public class StockPricePrediction {
 
     private static int exampleLength = 5; // time series length, assume 22 working days per month
 
-    public static void main(String[] args) throws IOException, SQLException {
-        JSONObject jSONObject=new JSONObject();
-
-
-        String sql_str = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'akshare'";
-        try (
-                Connection conn = DriverManager.getConnection(url, user, password);
-                Statement statement = conn.createStatement();
-                ResultSet resultSet = statement.executeQuery(sql_str);
-        ) {
-            while (resultSet.next()) {
-                String stockname = resultSet.getString("TABLE_NAME");
-                jSONObject=predict_run(stockname);
-                String str_res=jSONObject.toJSONString();
+//    public static void main(String[] args) throws IOException, SQLException {
+//        JSONObject jSONObject = new JSONObject();
 //
-                String sql_insert ="INSERT INTO ansys_results (`code`, `name`,`results`,`correctness`, `similarity` ) VALUES ('"+stockname+"','"+ jSONObject.get("name")+"','"+ str_res+"','"+ jSONObject.get("correctness")+"','"+ jSONObject.get("similarity")+"')";
-////                String sql_insert ="INSERT INTO ansys_results (`code`, `name`,`results`,`correctness`, `similarity` ) VALUES ('"+stockname+"','"+ jSONObject.get("name")+"','"+ jSONObject.get("results")+"','"+ jSONObject.get("correctness")+"','"+ jSONObject.get("similarity")+"')";
-                statement.execute(sql_insert);
-            }
+//
+//        String sql_str = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'akshare'";
+//        try {
+//            Connection conn = DriverManager.getConnection(url, user, password);
+//            Statement statement = conn.createStatement();
+//            ResultSet resultSet = statement.executeQuery(sql_str);
+//            Statement statement1 = conn.createStatement();
+//            while (resultSet.next()) {
+//                String stockname = resultSet.getString("TABLE_NAME");
+//                jSONObject = predict_run(stockname);
+//                String str_res = jSONObject.toJSONString();
+//                String sql_insert = "INSERT INTO ansys_results (`code`, `name`,`results`,`correctness`, `similarity` ) VALUES ('" + stockname + "','" + jSONObject.get("name") + "','" + str_res + "','" + jSONObject.get("correctness") + "','" + jSONObject.get("similarity") + "')";
+//                statement1.executeUpdate(sql_insert);
+//            }
+//
+//
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//
+//
+//    }
 
+    public static void main(String[] args) throws IOException, SQLException {
+        JSONObject jSONObject = new JSONObject();
+        his_ansys_main(22,"000670");
 
-
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
 
     }
 
     private static JSONObject predict_run(String stockname) throws IOException, InterruptedException {
-//        String file = new ClassPathResource("inputdata_predict.csv").getFile().getAbsolutePath();
-//        String file = new ClassPathResource("inputdata_predict"+stockname+".csv").getFile().getAbsolutePath();
-        String file ="E:/lipei/use/lstm/temp/inputdata_predict"+stockname+".csv";
+        String file = "E:/lipei/use/lstm/temp/inputdata_predict" + stockname + ".csv";
         String symbol = stockname; // stock name
         DatabaseToCSV databaseToCSV = new DatabaseToCSV();
-        JSONObject jSONObject = databaseToCSV.getStocksData(symbol);
-        JSONObject res=new JSONObject();
+        JSONObject jSONObject = databaseToCSV.getStocksData(symbol,0);
+        JSONObject res = new JSONObject();
 
 
         int batchSize = 64; // mini-batch size
@@ -124,11 +122,102 @@ public class StockPricePrediction {
         } else {
             double max = iterator.getMaxNum(category);
             double min = iterator.getMinNum(category);
-            res=predictPriceOneAhead(net, test, max, min, category);
+            res = predictPriceOneAhead(net, test, max, min, category);
         }
         log.info("Done...");
-        res.put("date",jSONObject.get("date"));
-        res.put("name",jSONObject.get("name"));
+        res.put("date", jSONObject.get("date"));
+        res.put("name", jSONObject.get("name"));
+        return res;
+    }
+
+    private static void his_ansys_main(int day_co,String stockname) {
+        double[] correctness_vol = new double[100];
+        double[] correctness_price = new double[100];
+        double[] similarity_vol = new double[100];
+        double[] similarity_price = new double[100];
+
+
+        for (int i = day_co; i >0; i--) {
+            try {
+                Connection conn = DriverManager.getConnection(url, user, password);
+                Statement statement = conn.createStatement();
+                JSONObject jSONObject = his_ansys(stockname,i);
+                correctness_vol[day_co-i]=Double.parseDouble(jSONObject.get("correctness_vol").toString());
+                correctness_price[day_co-i]=Double.parseDouble(jSONObject.get("correctness_price").toString());
+                similarity_vol[day_co-i]=Double.parseDouble(jSONObject.get("similarity_vol").toString());
+                similarity_price[day_co-i]=Double.parseDouble(jSONObject.get("similarity_price").toString());
+            } catch (InterruptedException | SQLException | IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+    }
+
+    private static JSONObject his_ansys(String stockname, int day_co) throws IOException, InterruptedException {
+        String file = "E:/lipei/use/lstm/temp/inputdata_predict" + stockname + ".csv";
+        String symbol = stockname; // stock name
+        DatabaseToCSV databaseToCSV = new DatabaseToCSV();
+        JSONObject jSONObject = databaseToCSV.getStocksData(symbol,day_co);
+        JSONObject res = new JSONObject();
+        JSONObject res1 = new JSONObject();
+
+
+        int batchSize = 64; // mini-batch size
+        double splitRatio = 0.9; // 90% for training, 10% for testing
+        int epochs = 44; // training epochs
+
+        log.info("Create dataSet iterator...");
+//        Thread.sleep(10000);
+        PriceCategory[] category = {PriceCategory.CLOSE, PriceCategory.VOLUME}; // CLOSE: predict close price
+        for (int ik = 0; ik < 2; ik++) {
+            StockDataSetIterator iterator = new StockDataSetIterator(file, symbol, batchSize, exampleLength, splitRatio, category[ik]);
+            log.info("Load test dataset...");
+            List<Pair<INDArray, INDArray>> test = iterator.getTestDataSet();
+
+
+            log.info("Build lstm networks...");
+            MultiLayerNetwork net = RecurrentNets.buildLstmNetworks(iterator.inputColumns(), iterator.totalOutcomes());
+
+            log.info("Training...");
+            for (int i = 0; i < epochs; i++) {
+                while (iterator.hasNext()) net.fit(iterator.next()); // fit model using mini-batch data
+                iterator.reset(); // reset iterator
+                net.rnnClearPreviousState(); // clear previous state
+            }
+
+            log.info("Saving model...");
+            File locationToSave = new File("src/main/resources/StockPriceLSTM_".concat(String.valueOf(category)).concat(".zip"));
+            // saveUpdater: i.e., the state for Momentum, RMSProp, Adagrad etc. Save this to train your network more in the future
+            ModelSerializer.writeModel(net, locationToSave, true);
+
+            log.info("Load model...");
+            net = ModelSerializer.restoreMultiLayerNetwork(locationToSave);
+
+            log.info("Testing...");
+            if (category.equals(PriceCategory.ALL)) {
+                INDArray max = Nd4j.create(iterator.getMaxArray());
+                INDArray min = Nd4j.create(iterator.getMinArray());
+                predictAllCategories(net, test, max, min);
+            } else {
+                double max = iterator.getMaxNum(category[ik]);
+                double min = iterator.getMinNum(category[ik]);
+                res1 = predictPriceOneAhead(net, test, max, min, category[ik]);
+            }
+            if(ik==0) {
+                res.put("correctness_vol",res1.get("correctness"));
+                res.put("similarity_vol",res1.get("similarity"));
+
+            }else{
+                res.put("correctness_price",res1.get("correctness"));
+                res.put("similarity_price",res1.get("similarity"));
+
+            }
+            res.put("date", jSONObject.get("date"));
+            res.put("name", jSONObject.get("name"));
+        }
+        log.info("Done...");
+
         return res;
     }
 
