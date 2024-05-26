@@ -76,6 +76,7 @@ public class DatabaseToCSV {
                 csvWriter.writeNext(data);
 
             }
+            csvWriter.close();
 
             jSONObject.put("date", data[0]);
             jSONObject.put("name", data[1]);

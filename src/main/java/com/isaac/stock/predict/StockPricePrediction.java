@@ -135,6 +135,7 @@ public class StockPricePrediction {
         double[] correctness_price = new double[100];
         double[] similarity_vol = new double[100];
         double[] similarity_price = new double[100];
+        String[] date = new String[100];
 
 
         for (int i = day_co; i >0; i--) {
@@ -146,10 +147,12 @@ public class StockPricePrediction {
                 correctness_price[day_co-i]=Double.parseDouble(jSONObject.get("correctness_price").toString());
                 similarity_vol[day_co-i]=Double.parseDouble(jSONObject.get("similarity_vol").toString());
                 similarity_price[day_co-i]=Double.parseDouble(jSONObject.get("similarity_price").toString());
+                date[day_co-i]=jSONObject.get("date").toString();
             } catch (InterruptedException | SQLException | IOException e) {
                 e.printStackTrace();
             }
-
+            PlotUtil.plot(correctness_vol, correctness_price, "正确率");
+            PlotUtil.plot(similarity_vol,similarity_price,"相似度");
         }
 
     }
@@ -204,7 +207,7 @@ public class StockPricePrediction {
                 double min = iterator.getMinNum(category[ik]);
                 res1 = predictPriceOneAhead(net, test, max, min, category[ik]);
             }
-            if(ik==0) {
+            if(ik==1) {
                 res.put("correctness_vol",res1.get("correctness"));
                 res.put("similarity_vol",res1.get("similarity"));
 
