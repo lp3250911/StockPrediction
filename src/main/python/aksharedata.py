@@ -1,8 +1,12 @@
 import akshare as ak
 import numpy as np
+import pymysql
 import pandas as pd
 from sqlalchemy import create_engine
 conn = create_engine('mysql://root:Root@127.0.0.1:3306/akshare?charset=utf8mb4&use_unicode=1')
+conn1 = pymysql.connect(host='localhost', user='root', password='Root', port=3306, db='akshare', charset='utf8mb4')
+conn2 = pymysql.connect(host='localhost', user='root', password='Root', port=3306, db='akshare', charset='utf8mb4')
+
 
 # stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol="688425", period="daily", start_date="20170101", end_date='20250101', adjust="")
 # # print(stock_zh_a_hist_df)
@@ -67,8 +71,48 @@ def etf_sel():
         pd.io.sql.to_sql(etf_his_df, row_etf[0], conn, if_exists='replace')
 
 
+def sel_stocks():
+    stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol='603259', period="daily", start_date="20210101", end_date='20250101', adjust="")
+    stock_zh_a_hist_df['板块概念']='医疗服务'
+    stock_zh_a_hist_df['代码']='603259'
+    stock_zh_a_hist_df['名称']='药明康德'
+    pd.io.sql.to_sql(stock_zh_a_hist_df, '603259', conn, if_exists='replace')
+
+def append_stocks():
+    # 取表名
+    sql_str = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'akshare'";
+    cur1 = conn1.cursor()
+    cur1.execute(sql_str)
+    conn1.commit()
+    rows = cur1.fetchall()
+    for row in rows:
+        stockname=row[0]
+        cur2 = conn2.cursor()
+        sel_sql="select * from `"+stockname+"` order by 日期 desc limit 1"
+        cur2.execute(sel_sql)
+        conn2.commit()
+        lasttime=cur2.fetchall()
+        for lt in lasttime:
+            last_day=lt[1]
+            bkgn=lt[12]
+            code=lt[13]
+            name=lt[14]
+        str_day= last_day.strftime("%Y%m%d")
+        stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol=code, period="daily", start_date=str_day, end_date='20250101', adjust="")
+        stock_zh_a_hist_df['板块概念']=bkgn
+        stock_zh_a_hist_df['代码']=code
+        stock_zh_a_hist_df['名称']=name
+        pd.io.sql.to_sql(stock_zh_a_hist_df, code, conn, if_exists='append')
+
+
+
+
+
+
+
+
 
 
 
 if __name__ == '__main__':
-    etf_sel()
+    append_stocks()

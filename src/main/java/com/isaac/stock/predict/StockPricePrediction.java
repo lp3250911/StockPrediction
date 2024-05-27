@@ -1,5 +1,6 @@
 package com.isaac.stock.predict;
 
+import com.alibaba.fastjson.JSONArray;
 import com.isaac.stock.model.RecurrentNets;
 import com.isaac.stock.representation.PriceCategory;
 import com.isaac.stock.representation.StockDataSetIterator;
@@ -17,6 +18,7 @@ import com.alibaba.fastjson.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
+import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -42,11 +44,22 @@ public class StockPricePrediction {
     private static final Logger log = LoggerFactory.getLogger(StockPricePrediction.class);
 
     private static int exampleLength = 5; // time series length, assume 22 working days per month
+//选股
+    public static void main(String[] args) throws IOException, SQLException {
+        JSONObject jSONObject = new JSONObject();
+        String sql_str = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'akshare'";
+        Connection conn = DriverManager.getConnection(url, user, password);
+        Statement statement = conn.createStatement();
+        ResultSet resultSet = statement.executeQuery(sql_str);
+        while (resultSet.next()) {
+            String stockname = resultSet.getString("TABLE_NAME");
+            sel_stocks_tools(2,stockname);
+        }
+    }
 
+//    //板块+分成股
 //    public static void main(String[] args) throws IOException, SQLException {
 //        JSONObject jSONObject = new JSONObject();
-//
-//
 //        String sql_str = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'akshare'";
 //        try {
 //            Connection conn = DriverManager.getConnection(url, user, password);
@@ -68,14 +81,14 @@ public class StockPricePrediction {
 //
 //
 //    }
-
-    public static void main(String[] args) throws IOException, SQLException {
-        JSONObject jSONObject = new JSONObject();
-        his_ansys_main(22,"000670");
-
-
-
-    }
+//历史数据分析
+//    public static void main(String[] args) throws IOException, SQLException {
+//        JSONObject jSONObject = new JSONObject();
+//        his_ansys_main(44,"688425");
+//
+//
+//
+//    }
 
     private static JSONObject predict_run(String stockname) throws IOException, InterruptedException {
         String file = "E:/lipei/use/lstm/temp/inputdata_predict" + stockname + ".csv";
@@ -130,18 +143,20 @@ public class StockPricePrediction {
         return res;
     }
 
-    private static void his_ansys_main(int day_co,String stockname) {
+    private static void his_ansys_main(int day_co,String stockname) throws SQLException {
         double[] correctness_vol = new double[100];
         double[] correctness_price = new double[100];
         double[] similarity_vol = new double[100];
         double[] similarity_price = new double[100];
         String[] date = new String[100];
+        JSONObject jSONObject_res=new JSONObject();
+        Statement statement = null;
 
 
         for (int i = day_co; i >0; i--) {
             try {
                 Connection conn = DriverManager.getConnection(url, user, password);
-                Statement statement = conn.createStatement();
+                statement = conn.createStatement();
                 JSONObject jSONObject = his_ansys(stockname,i);
                 correctness_vol[day_co-i]=Double.parseDouble(jSONObject.get("correctness_vol").toString());
                 correctness_price[day_co-i]=Double.parseDouble(jSONObject.get("correctness_price").toString());
@@ -151,11 +166,83 @@ public class StockPricePrediction {
             } catch (InterruptedException | SQLException | IOException e) {
                 e.printStackTrace();
             }
-            PlotUtil.plot(correctness_vol, correctness_price, "正确率");
-            PlotUtil.plot(similarity_vol,similarity_price,"相似度");
+
+        }
+        PlotUtil.plot(correctness_vol, correctness_price, "正确率");
+        PlotUtil.plot(similarity_vol,similarity_price,"相似度");
+        jSONObject_res.put("date",date);
+        jSONObject_res.put("correctness_vol",correctness_vol);
+        jSONObject_res.put("correctness_price",correctness_price);
+        jSONObject_res.put("similarity_vol",similarity_vol);
+        jSONObject_res.put("similarity_price",similarity_price);
+        String str_res = jSONObject_res.toJSONString();
+        String sql_update = "update ansys_results set his_ansys='"+str_res +"' where name= "+stockname;
+        statement.executeUpdate(sql_update );
+
+    }
+
+    private static void sel_stocks_tools(int day_co,String stockname) throws SQLException {
+        double[] correctness_vol = new double[100];
+        double[] correctness_price = new double[100];
+        double[] similarity_vol = new double[100];
+        double[] similarity_price = new double[100];
+        String[] date = new String[100];
+        JSONObject jSONObject_res=new JSONObject();
+        Statement statement = null;
+        String name="";
+
+
+        for (int i = day_co; i >0; i--) {
+            try {
+                Connection conn = DriverManager.getConnection(url, user, password);
+                statement = conn.createStatement();
+                JSONObject jSONObject = his_ansys(stockname,i);
+                correctness_vol[day_co-i]=Double.parseDouble(jSONObject.get("correctness_vol").toString());
+                correctness_price[day_co-i]=Double.parseDouble(jSONObject.get("correctness_price").toString());
+                similarity_vol[day_co-i]=Double.parseDouble(jSONObject.get("similarity_vol").toString());
+                similarity_price[day_co-i]=Double.parseDouble(jSONObject.get("similarity_price").toString());
+                date[day_co-i]=jSONObject.get("date").toString();
+                name=jSONObject.get("name").toString();
+            } catch (InterruptedException | SQLException | IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+        jSONObject_res.put("date",date);
+        jSONObject_res.put("correctness_vol",correctness_vol);
+        jSONObject_res.put("correctness_price",correctness_price);
+        jSONObject_res.put("similarity_vol",similarity_vol);
+        jSONObject_res.put("similarity_price",similarity_price);
+        String str_res = jSONObject_res.toJSONString();
+        double min_v = Integer.MAX_VALUE;
+        double min_p = Integer.MAX_VALUE;
+        double[] s_vol=new double[day_co];
+        double[] s_price=new double[day_co];
+        for(int j=0;j<day_co;j++){
+            s_vol[j]=similarity_vol[j];
+            s_price[j]=similarity_price[j];
+
+        }
+        for (double num : s_vol) {
+            min_v = Math.min(min_v, num); // 找到最小值
+        }
+        for (double num : s_price) {
+            min_p = Math.min(min_p, num); // 找到最小值
+        }
+//        boolean t1=s_vol[0]/min_v>1.15 &&s_vol[4]/min_v>1.15;
+//        boolean t2=s_price[0]/min_p>1.15 &&s_price[4]/min_p>1.15;
+
+        boolean t1=s_vol[1]/s_vol[0]>1.15 ;
+        boolean t2=s_price[1]/s_price[0]>1.15;
+        log.info(stockname+"处理中...");
+        if(t1 || t2) {
+            String sql_update = "insert into  sel_stocks  (`code`, `results`) VALUES ('" + stockname + "','"+ str_res +"')";
+            statement.executeUpdate(sql_update);
         }
 
     }
+
+
 
     private static JSONObject his_ansys(String stockname, int day_co) throws IOException, InterruptedException {
         String file = "E:/lipei/use/lstm/temp/inputdata_predict" + stockname + ".csv";
@@ -190,7 +277,7 @@ public class StockPricePrediction {
             }
 
             log.info("Saving model...");
-            File locationToSave = new File("src/main/resources/StockPriceLSTM_".concat(String.valueOf(category)).concat(".zip"));
+            File locationToSave = new File("src/main/resources/StockPriceLSTM.zip");
             // saveUpdater: i.e., the state for Momentum, RMSProp, Adagrad etc. Save this to train your network more in the future
             ModelSerializer.writeModel(net, locationToSave, true);
 
