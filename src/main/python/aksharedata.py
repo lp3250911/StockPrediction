@@ -3,6 +3,7 @@ import numpy as np
 import pymysql
 import pandas as pd
 from sqlalchemy import create_engine
+from datetime import datetime, timedelta
 conn = create_engine('mysql://root:Root@127.0.0.1:3306/akshare?charset=utf8mb4&use_unicode=1')
 conn1 = pymysql.connect(host='localhost', user='root', password='Root', port=3306, db='akshare', charset='utf8mb4')
 conn2 = pymysql.connect(host='localhost', user='root', password='Root', port=3306, db='akshare', charset='utf8mb4')
@@ -87,22 +88,29 @@ def append_stocks():
     rows = cur1.fetchall()
     for row in rows:
         stockname=row[0]
-        cur2 = conn2.cursor()
-        sel_sql="select * from `"+stockname+"` order by 日期 desc limit 1"
-        cur2.execute(sel_sql)
-        conn2.commit()
-        lasttime=cur2.fetchall()
-        for lt in lasttime:
-            last_day=lt[1]
-            bkgn=lt[12]
-            code=lt[13]
-            name=lt[14]
-        str_day= last_day.strftime("%Y%m%d")
-        stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol=code, period="daily", start_date=str_day, end_date='20250101', adjust="")
-        stock_zh_a_hist_df['板块概念']=bkgn
-        stock_zh_a_hist_df['代码']=code
-        stock_zh_a_hist_df['名称']=name
-        pd.io.sql.to_sql(stock_zh_a_hist_df, code, conn, if_exists='append')
+        if stockname.isdigit():
+            cur2 = conn2.cursor()
+            sel_sql="select * from `"+stockname+"` order by 日期 desc limit 1"
+            cur2.execute(sel_sql)
+            conn2.commit()
+            lasttime=cur2.fetchall()
+            for lt in lasttime:
+                last_day=lt[1]
+                bkgn=lt[12]
+                code=lt[13]
+                name=lt[14]
+            date_str = last_day.strftime("%Y-%m-%d")
+            date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+            next_day = date_obj + timedelta(days=1)
+
+            str_day= next_day.strftime("%Y%m%d")
+
+
+            stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol=code, period="daily", start_date=str_day, end_date='20250101', adjust="")
+            stock_zh_a_hist_df['板块概念']=bkgn
+            stock_zh_a_hist_df['代码']=code
+            stock_zh_a_hist_df['名称']=name
+            pd.io.sql.to_sql(stock_zh_a_hist_df, code, conn, if_exists='append')
 
 
 

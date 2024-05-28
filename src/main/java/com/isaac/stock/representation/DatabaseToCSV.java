@@ -41,9 +41,9 @@ public class DatabaseToCSV {
             resultSet.next();
             int co = Integer.parseInt(resultSet.getString("co")) - day_co;
             if (isNumeric(stockname)) {
-                str_sql = "SELECT 日期, 代码,  开盘 , 收盘,最低 ,最高, 换手率,名称  FROM `" + stockname + "` order by 日期 asc LIMIT 0," + co;
+                str_sql = "SELECT DISTINCT 日期, 代码,  开盘 , 收盘,最低 ,最高, 换手率,名称  FROM `" + stockname + "` order by 日期 asc LIMIT 0," + co;
             } else {
-                str_sql = "SELECT date , 名称,  open, close,low ,high, volume  FROM `" + stockname + "` order by date asc  LIMIT 0," + co;
+                str_sql = "SELECT DISTINCT date , 名称,  open, close,low ,high, volume  FROM `" + stockname + "` order by date asc  LIMIT 0," + co;
             }
             resultSet = statement.executeQuery(str_sql);
             // 写入标题行date,symbol,open,close,low,high,volume
