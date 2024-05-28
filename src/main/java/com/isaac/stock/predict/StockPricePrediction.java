@@ -336,14 +336,14 @@ public class StockPricePrediction implements Runnable {
 
     private static void make_model() throws SQLException, IOException, InterruptedException {//只进行最近一天的成交量预测、相似计算模型生成
         String sql_str = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'akshare'";
-        JSONObject res=new JSONObject();
+        JSONObject res = new JSONObject();
         Connection conn = DriverManager.getConnection(url, user, password);
         Statement statement = conn.createStatement();
         Statement statement1 = conn.createStatement();
         ResultSet resultSet = statement.executeQuery(sql_str);
         while (resultSet.next()) {
             String stockname = resultSet.getString("TABLE_NAME");
-                res=his_ansys(stockname, 0, 0);
+            res = his_ansys(stockname, 0, 0);
             sql_str = "SELECT code,similarity FROM ansys_results WHERE code = '" + stockname + "'";
             ResultSet resultSet1 = statement1.executeQuery(sql_str);
 //            resultSet1.next();
@@ -352,7 +352,7 @@ public class StockPricePrediction implements Runnable {
                 String sql_insert = "INSERT INTO ansys_results (`code`, `name` ) VALUES ('" + stockname + "','" + stockname + "')";
                 statement1.execute(sql_insert);
 
-            }else{
+            } else {
                 similarity_str = resultSet1.getString("similarity");
             }
 
@@ -383,6 +383,10 @@ public class StockPricePrediction implements Runnable {
 
 
 //
+
+    }
+
+    private static void find_head(){//
 
     }
 

@@ -30,13 +30,11 @@ def stocks():
         if ak.stock_board_concept_cons_em(symbol=row_concept[1]).size>0:
             stock_board_concept_cons_em_df = ak.stock_board_concept_cons_em(symbol=row_concept[1])
             for index1,row_chengfengu in stock_board_concept_cons_em_df.iterrows():
-                i=i+1
-                if i>3658:
-                    stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol=row_chengfengu[1], period="daily", start_date="20210101", end_date='20250101', adjust="")
-                    stock_zh_a_hist_df['板块概念']=row_concept[1]
-                    stock_zh_a_hist_df['代码']=row_chengfengu[1]
-                    stock_zh_a_hist_df['名称']=row_chengfengu[2]
-                    pd.io.sql.to_sql(stock_zh_a_hist_df, row_chengfengu[1], conn, if_exists='replace')
+                stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol=row_chengfengu[1], period="daily", start_date="20210101", end_date='20250101', adjust="")
+                stock_zh_a_hist_df['板块概念']=row_concept[1]
+                stock_zh_a_hist_df['代码']=row_chengfengu[1]
+                stock_zh_a_hist_df['名称']=row_chengfengu[2]
+                pd.io.sql.to_sql(stock_zh_a_hist_df, row_chengfengu[1], conn, if_exists='replace')
 
 
         pass
@@ -53,11 +51,7 @@ def conceptbk():
     concept_stocks_df = ak.stock_board_concept_name_em()
     for index,row_concept in concept_stocks_df.iterrows():
         oard_concept_hist_em_df = ak.stock_board_concept_hist_em(symbol=row_concept[1], start_date="20210101", end_date="20250108", adjust="")
-        #
-        # oard_concept_hist_em_df['排名']=index
         pd.io.sql.to_sql(oard_concept_hist_em_df, row_concept[1], conn, if_exists='replace')
-
-    pass
 
 def etf_sel():
     # 获取上证ETF成分股
@@ -72,7 +66,7 @@ def etf_sel():
         pd.io.sql.to_sql(etf_his_df, row_etf[0], conn, if_exists='replace')
 
 
-def sel_stocks():
+def sel_stocks():#单独导入日线数据
     stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol='603259', period="daily", start_date="20210101", end_date='20250101', adjust="")
     stock_zh_a_hist_df['板块概念']='医疗服务'
     stock_zh_a_hist_df['代码']='603259'
@@ -89,6 +83,7 @@ def append_stocks():
     for row in rows:
         stockname=row[0]
         if stockname.isdigit():
+            stockname=row[0]
             cur2 = conn2.cursor()
             sel_sql="select * from `"+stockname+"` order by 日期 desc limit 1"
             cur2.execute(sel_sql)
@@ -102,18 +97,60 @@ def append_stocks():
             date_str = last_day.strftime("%Y-%m-%d")
             date_obj = datetime.strptime(date_str, "%Y-%m-%d")
             next_day = date_obj + timedelta(days=1)
-
             str_day= next_day.strftime("%Y%m%d")
-
-
             stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol=code, period="daily", start_date=str_day, end_date='20250101', adjust="")
             stock_zh_a_hist_df['板块概念']=bkgn
             stock_zh_a_hist_df['代码']=code
             stock_zh_a_hist_df['名称']=name
             pd.io.sql.to_sql(stock_zh_a_hist_df, code, conn, if_exists='append')
 
+def append_conceptbk():
+    # 取表名
+    sql_str = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'akshare'";
+    cur1 = conn1.cursor()
+    cur1.execute(sql_str)
+    conn1.commit()
+    rows = cur1.fetchall()
+    for row in rows:
+        stockname=row[0]
+        if stockname == 'ansys_results' or stockname == 'sel_stocks' or stockname == 'head_stocks':
+            continue
+        cur2 = conn2.cursor()
+        sel_sql="select * from `"+stockname+"` order by 日期 desc limit 1"
+        cur2.execute(sel_sql)
+        conn2.commit()
+        lasttime=cur2.fetchall()
+        for lt in lasttime:
+            last_day=lt[1]
+            if stockname.isdigit():
+                bkgn=lt[12]
+                code=lt[13]
+                name=lt[14]
+            else:
+                pass
+        date_str = last_day.strftime("%Y-%m-%d")
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        next_day = date_obj + timedelta(days=1)
+        str_day= next_day.strftime("%Y%m%d")
+        stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol=code, period="daily", start_date=str_day, end_date='20250101', adjust="")
+        if stockname.isdigit():
+            stock_zh_a_hist_df['板块概念']=bkgn
+            stock_zh_a_hist_df['代码']=code
+            stock_zh_a_hist_df['名称']=name
+        pd.io.sql.to_sql(stock_zh_a_hist_df, code, conn, if_exists='append')
 
 
+
+def head_stocks_find():
+    sql_str = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'akshare'";
+    cur1 = conn1.cursor()
+    cur1.execute(sql_str)
+    conn1.commit()
+    rows = cur1.fetchall()
+    for row in rows:
+        stockname=row[0]
+        if stockname == 'ansys_results' or stockname == 'sel_stocks' or stockname == 'head_stocks':
+            continue
 
 
 
