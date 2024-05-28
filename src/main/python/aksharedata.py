@@ -106,15 +106,9 @@ def append_stocks():
 
 def append_conceptbk():
     # 取表名
-    sql_str = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'akshare'";
-    cur1 = conn1.cursor()
-    cur1.execute(sql_str)
-    conn1.commit()
-    rows = cur1.fetchall()
-    for row in rows:
-        stockname=row[0]
-        if stockname == 'ansys_results' or stockname == 'sel_stocks' or stockname == 'head_stocks':
-            continue
+    concept_stocks_df = ak.stock_board_concept_name_em()
+    for index,row_concept in concept_stocks_df.iterrows():
+        stockname=row_concept[1]
         cur2 = conn2.cursor()
         sel_sql="select * from `"+stockname+"` order by 日期 desc limit 1"
         cur2.execute(sel_sql)
@@ -122,22 +116,13 @@ def append_conceptbk():
         lasttime=cur2.fetchall()
         for lt in lasttime:
             last_day=lt[1]
-            if stockname.isdigit():
-                bkgn=lt[12]
-                code=lt[13]
-                name=lt[14]
-            else:
-                pass
-        date_str = last_day.strftime("%Y-%m-%d")
+        date_str = last_day
         date_obj = datetime.strptime(date_str, "%Y-%m-%d")
         next_day = date_obj + timedelta(days=1)
         str_day= next_day.strftime("%Y%m%d")
-        stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol=code, period="daily", start_date=str_day, end_date='20250101', adjust="")
-        if stockname.isdigit():
-            stock_zh_a_hist_df['板块概念']=bkgn
-            stock_zh_a_hist_df['代码']=code
-            stock_zh_a_hist_df['名称']=name
-        pd.io.sql.to_sql(stock_zh_a_hist_df, code, conn, if_exists='append')
+        oard_concept_hist_em_df = ak.stock_board_concept_hist_em(symbol=row_concept[1], start_date=str_day, end_date="20250108", adjust="")
+        pd.io.sql.to_sql(oard_concept_hist_em_df, row_concept[1], conn, if_exists='append')
+
 
 
 
@@ -160,4 +145,4 @@ def head_stocks_find():
 
 
 if __name__ == '__main__':
-    append_stocks()
+    conceptbk()
