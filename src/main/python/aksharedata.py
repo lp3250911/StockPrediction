@@ -4,6 +4,7 @@ import pymysql
 import pandas as pd
 from sqlalchemy import create_engine
 from datetime import datetime, timedelta
+# conn = create_engine('mysql://root:Root@127.0.0.1:3306/concept?charset=utf8mb4&use_unicode=1')
 conn = create_engine('mysql://root:Root@127.0.0.1:3306/akshare?charset=utf8mb4&use_unicode=1')
 conn1 = pymysql.connect(host='localhost', user='root', password='Root', port=3306, db='akshare', charset='utf8mb4')
 conn2 = pymysql.connect(host='localhost', user='root', password='Root', port=3306, db='akshare', charset='utf8mb4')
@@ -50,8 +51,8 @@ def stocks():
 def conceptbk():
     concept_stocks_df = ak.stock_board_concept_name_em()
     for index,row_concept in concept_stocks_df.iterrows():
-        oard_concept_hist_em_df = ak.stock_board_concept_hist_em(symbol=row_concept[1], start_date="20210101", end_date="20250108", adjust="")
-        pd.io.sql.to_sql(oard_concept_hist_em_df, row_concept[1], conn, if_exists='replace')
+        oard_concept_hist_em_df = ak.stock_board_concept_hist_em(symbol=row_concept[1], start_date="20240101", end_date="20250108", adjust="")
+        pd.io.sql.to_sql(oard_concept_hist_em_df, row_concept[1].lower(), conn, if_exists='replace')
 
 def etf_sel():
     # 获取上证ETF成分股
@@ -145,4 +146,4 @@ def head_stocks_find():
 
 
 if __name__ == '__main__':
-    conceptbk()
+    append_stocks()
