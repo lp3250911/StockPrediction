@@ -377,7 +377,8 @@ public class StockPricePrediction implements Runnable  {
     }
 
     private static void make_model() throws SQLException, IOException, InterruptedException {//只进行最近一天的成交量预测、相似计算模型生成
-        String sql_str = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'akshare'";
+        String sql_str = "SELECT 代码 FROM `filtered_stocks` order by `index` asc";
+//        String sql_str = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'akshare'";
         JSONObject res = new JSONObject();
         Connection conn = DriverManager.getConnection(url, user, password);
         Statement statement = conn.createStatement();
@@ -386,8 +387,8 @@ public class StockPricePrediction implements Runnable  {
         int ii = -1;
         while (resultSet.next()) {
             ii++;
-            String stockname = resultSet.getString("TABLE_NAME");
-            if (ii <= 500 && stockname.chars().allMatch(Character::isDigit)) {
+            String stockname = resultSet.getString("代码");
+            if (ii <= 50 && stockname.chars().allMatch(Character::isDigit)) {
                 sql_str = "SELECT code,similarity FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
                 String similarity_str = null;
@@ -413,7 +414,7 @@ public class StockPricePrediction implements Runnable  {
                 }
                         System.out.println("计算。。。");
 
-                        res = his_ansys(stockname, 0, 0);
+                        res = his_ansys(stockname, 1, 0);
 
 
                         JSONObject jsonObject1 = new JSONObject();
@@ -423,6 +424,8 @@ public class StockPricePrediction implements Runnable  {
 
                         similarity_str = similarity_str + "," + jsonObject1.toJSONString();
                         String sql_update = "Update ansys_results set similarity= '" + similarity_str + "' where code = '" + stockname + "'";
+                        statement1.executeUpdate(sql_update);
+                        sql_update = "Update filtered_stocks set 相似度= '" + res.get("similarity_vol") + "' where 代码 = '" + stockname + "'";
                         statement1.executeUpdate(sql_update);
                         log.info(stockname + "处理完成...");
                     }
@@ -430,7 +433,7 @@ public class StockPricePrediction implements Runnable  {
             }
 
     private static void make_model2() throws SQLException, IOException, InterruptedException {//只进行最近一天的成交量预测、相似计算模型生成
-        String sql_str = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'akshare'";
+        String sql_str = "SELECT 代码 FROM `filtered_stocks` order by `index` asc";
         JSONObject res = new JSONObject();
         Connection conn = DriverManager.getConnection(url, user, password);
         Statement statement = conn.createStatement();
@@ -439,8 +442,8 @@ public class StockPricePrediction implements Runnable  {
         int ii = -1;
         while (resultSet.next()) {
             ii++;
-            String stockname = resultSet.getString("TABLE_NAME");
-            if (ii > 500 && ii <= 1000 && stockname.chars().allMatch(Character::isDigit) ) {
+            String stockname = resultSet.getString("代码");
+            if (ii > 50 && ii <= 100 && stockname.chars().allMatch(Character::isDigit) ) {
 
                 sql_str = "SELECT code,similarity FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
@@ -467,7 +470,7 @@ public class StockPricePrediction implements Runnable  {
                 }
                         System.out.println("计算。。。");
 
-                        res = his_ansys(stockname, 0, 0);
+                        res = his_ansys(stockname, 1, 0);
 
 
                         JSONObject jsonObject1 = new JSONObject();
@@ -478,12 +481,14 @@ public class StockPricePrediction implements Runnable  {
                         similarity_str = similarity_str + "," + jsonObject1.toJSONString();
                         String sql_update = "Update ansys_results set similarity= '" + similarity_str + "' where code = '" + stockname + "'";
                         statement1.executeUpdate(sql_update);
+                sql_update = "Update filtered_stocks set 相似度= '" + res.get("similarity_vol") + "' where 代码 = '" + stockname + "'";
+                statement1.executeUpdate(sql_update);
                         log.info(stockname + "处理完成...");
                     }
                 }
             }
     private static void make_model3() throws SQLException, IOException, InterruptedException {//只进行最近一天的成交量预测、相似计算模型生成
-        String sql_str = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'akshare'";
+        String sql_str = "SELECT 代码 FROM `filtered_stocks` order by `index` asc";
         JSONObject res = new JSONObject();
         Connection conn = DriverManager.getConnection(url, user, password);
         Statement statement = conn.createStatement();
@@ -492,8 +497,8 @@ public class StockPricePrediction implements Runnable  {
         int ii = -1;
         while (resultSet.next()) {
             ii++;
-            String stockname = resultSet.getString("TABLE_NAME");
-            if (ii > 1000 && ii<=1500 && stockname.chars().allMatch(Character::isDigit)) {
+            String stockname = resultSet.getString("代码");
+            if (ii > 100 && ii<=150 && stockname.chars().allMatch(Character::isDigit)) {
 
                 sql_str = "SELECT code,similarity FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
@@ -520,7 +525,7 @@ public class StockPricePrediction implements Runnable  {
                 }
                         System.out.println("计算。。。");
 
-                        res = his_ansys(stockname, 0, 0);
+                        res = his_ansys(stockname, 1, 0);
 
 
                         JSONObject jsonObject1 = new JSONObject();
@@ -531,6 +536,8 @@ public class StockPricePrediction implements Runnable  {
                         similarity_str = similarity_str + "," + jsonObject1.toJSONString();
                         String sql_update = "Update ansys_results set similarity= '" + similarity_str + "' where code = '" + stockname + "'";
                         statement1.executeUpdate(sql_update);
+                sql_update = "Update filtered_stocks set 相似度= '" + res.get("similarity_vol") + "' where 代码 = '" + stockname + "'";
+                statement1.executeUpdate(sql_update);
                         log.info(stockname + "处理完成...");
                     }
                 }
@@ -539,7 +546,7 @@ public class StockPricePrediction implements Runnable  {
 
 
     private static void make_model4() throws SQLException, IOException, InterruptedException {//只进行最近一天的成交量预测、相似计算模型生成
-        String sql_str = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'akshare'";
+        String sql_str = "SELECT 代码 FROM `filtered_stocks` order by `index` asc";
         JSONObject res = new JSONObject();
         Connection conn = DriverManager.getConnection(url, user, password);
         Statement statement = conn.createStatement();
@@ -548,8 +555,8 @@ public class StockPricePrediction implements Runnable  {
         int ii = -1;
         while (resultSet.next()) {
             ii++;
-            String stockname = resultSet.getString("TABLE_NAME");
-            if (ii > 1500 && ii<=2000 && stockname.chars().allMatch(Character::isDigit)) {
+            String stockname = resultSet.getString("代码");
+            if (ii > 150 && ii<=200 && stockname.chars().allMatch(Character::isDigit)) {
 
                 sql_str = "SELECT code,similarity FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
@@ -576,7 +583,7 @@ public class StockPricePrediction implements Runnable  {
                 }
                         System.out.println("计算。。。");
 
-                        res = his_ansys(stockname, 0, 0);
+                        res = his_ansys(stockname, 1, 0);
 
 
                         JSONObject jsonObject1 = new JSONObject();
@@ -587,6 +594,8 @@ public class StockPricePrediction implements Runnable  {
                         similarity_str = similarity_str + "," + jsonObject1.toJSONString();
                         String sql_update = "Update ansys_results set similarity= '" + similarity_str + "' where code = '" + stockname + "'";
                         statement1.executeUpdate(sql_update);
+                sql_update = "Update filtered_stocks set 相似度= '" + res.get("similarity_vol") + "' where 代码 = '" + stockname + "'";
+                statement1.executeUpdate(sql_update);
                         log.info(stockname + "处理完成...");
                     }
                 }
@@ -616,8 +625,6 @@ public class StockPricePrediction implements Runnable  {
             StockDataSetIterator iterator = new StockDataSetIterator(file, symbol, batchSize, exampleLength, splitRatio, category[ik]);
             log.info("Load test dataset...");
             List<Pair<INDArray, INDArray>> test = iterator.getTestDataSet();
-
-
             log.info("Build lstm networks...");
             MultiLayerNetwork net = RecurrentNets.buildLstmNetworks(iterator.inputColumns(), iterator.totalOutcomes());
 

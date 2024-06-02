@@ -5,6 +5,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 from datetime import datetime, timedelta
 # conn = create_engine('mysql://root:Root@127.0.0.1:3306/concept?charset=utf8mb4&use_unicode=1')
+conn0 = create_engine('mysql://root:Root@127.0.0.1:3306/akshare?charset=utf8mb4&use_unicode=1')
 conn = create_engine('mysql://root:Root@127.0.0.1:3306/akshare?charset=utf8mb4&use_unicode=1')
 conn1 = pymysql.connect(host='localhost', user='root', password='Root', port=3306, db='akshare', charset='utf8mb4')
 conn2 = pymysql.connect(host='localhost', user='root', password='Root', port=3306, db='akshare', charset='utf8mb4')
@@ -133,17 +134,62 @@ def head_stocks_find():
     cur1.execute(sql_str)
     conn1.commit()
     rows = cur1.fetchall()
+    # 初始化一个空的DataFrame，指定列名
+    column_names = ['代码', '换手率']
+    res_df = pd.DataFrame(columns=column_names)
     for row in rows:
         stockname=row[0]
-        if stockname == 'ansys_results' or stockname == 'sel_stocks' or stockname == 'head_stocks':
+        if stockname == 'ansys_results' or stockname == 'sel_stocks' or stockname == 'head_stocks' or stockname =='filtered_stocks':
             continue
+        else:
+            last_sql="select 换手率 from `"+row[0]+"` order by 日期 desc limit 1"
+            cur2 = conn2.cursor()
+            cur2.execute(last_sql)
+            conn2.commit()
+            hsls = cur2.fetchall()
+            hsl=hsls[0]
+            new_recorde = pd.DataFrame([{"代码": row[0], "换手率": hsl[0],"相似度":0}], index=[res_df.shape[0]])
+            res_df=pd.concat([res_df,new_recorde])
 
 
 
+    print(res_df)
+    sorted_df=res_df.sort_values(by="换手率", ascending=False)
+    filtered_stocks=sorted_df[
+        (sorted_df["换手率"] > 1) &
+        (sorted_df["换手率"] < 3)
+        ]
+    filtered_stocks.reset_index(drop=True,inplace=True)
+    pd.io.sql.to_sql(sorted_df, "head_stocks", conn0, if_exists='replace')
+    pd.io.sql.to_sql(filtered_stocks, "filtered_stocks", conn, if_exists='replace')
+    pass
+
+
+
+
+
+
+
+
+def getallstocks():
+    stock_zh_a_spot_df=ak.stock_zh_a_spot()
+    filtered_stocks=stock_zh_a_spot_df[
+        (~stock_zh_a_spot_df["名称"].str.contains("ST", case=False)) &
+        (~stock_zh_a_spot_df["代码"].str.contains("bj", case=False))
+    ]
+    for index,row in filtered_stocks.iterrows():
+        code_str=row["代码"][2:]
+        name_str=row["名称"]
+        stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol=code_str, period="daily", start_date="20210101", end_date='20240530', adjust="")
+        stock_zh_a_hist_df['板块概念']=''
+        stock_zh_a_hist_df['代码']=code_str
+        stock_zh_a_hist_df['名称']=name_str
+        pd.io.sql.to_sql(stock_zh_a_hist_df, code_str, conn, if_exists='replace')
 
 
 
 
 
 if __name__ == '__main__':
-    append_stocks()
+    head_stocks_find()
+    print("have done")
