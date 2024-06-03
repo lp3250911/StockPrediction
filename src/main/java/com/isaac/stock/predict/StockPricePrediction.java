@@ -58,7 +58,8 @@ public class StockPricePrediction implements Runnable  {
         public void run() {
             // 线程1的业务逻辑
             try {
-                make_model();
+//                make_model();
+                poc_head_stocks1();
             } catch (SQLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -74,7 +75,8 @@ public class StockPricePrediction implements Runnable  {
         public void run() {
             // 线程2的业务逻辑
             try {
-                make_model2();
+//                make_model2();
+                poc_head_stocks2();
             } catch (SQLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -90,7 +92,8 @@ public class StockPricePrediction implements Runnable  {
         public void run() {
             // 线程3的业务逻辑
             try {
-                make_model3();
+//                make_model3();
+                poc_head_stocks3();
             } catch (SQLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -106,7 +109,8 @@ public class StockPricePrediction implements Runnable  {
         public void run() {
             // 线程3的业务逻辑
             try {
-                make_model4();
+//                make_model4();
+                poc_head_stocks4();
             } catch (SQLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -388,7 +392,7 @@ public class StockPricePrediction implements Runnable  {
         while (resultSet.next()) {
             ii++;
             String stockname = resultSet.getString("代码");
-            if (ii <= 50 && stockname.chars().allMatch(Character::isDigit)) {
+            if (ii > 432 && ii <= 433 && stockname.chars().allMatch(Character::isDigit)) {
                 sql_str = "SELECT code,similarity FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
                 String similarity_str = null;
@@ -443,7 +447,7 @@ public class StockPricePrediction implements Runnable  {
         while (resultSet.next()) {
             ii++;
             String stockname = resultSet.getString("代码");
-            if (ii > 50 && ii <= 100 && stockname.chars().allMatch(Character::isDigit) ) {
+            if (ii > 533 && ii <= 534 && stockname.chars().allMatch(Character::isDigit) ) {
 
                 sql_str = "SELECT code,similarity FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
@@ -498,7 +502,7 @@ public class StockPricePrediction implements Runnable  {
         while (resultSet.next()) {
             ii++;
             String stockname = resultSet.getString("代码");
-            if (ii > 100 && ii<=150 && stockname.chars().allMatch(Character::isDigit)) {
+            if (ii > 596 && ii<=600 && stockname.chars().allMatch(Character::isDigit)) {
 
                 sql_str = "SELECT code,similarity FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
@@ -556,7 +560,7 @@ public class StockPricePrediction implements Runnable  {
         while (resultSet.next()) {
             ii++;
             String stockname = resultSet.getString("代码");
-            if (ii > 150 && ii<=200 && stockname.chars().allMatch(Character::isDigit)) {
+            if (ii > 497 && ii<=500 && stockname.chars().allMatch(Character::isDigit)) {
 
                 sql_str = "SELECT code,similarity FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
@@ -600,6 +604,199 @@ public class StockPricePrediction implements Runnable  {
                     }
                 }
             }
+
+    private static void poc_head_stocks1() throws SQLException, IOException, InterruptedException {
+        Connection conn = DriverManager.getConnection(url, user, password);
+        int day_long=22;
+        double[] similarity_vol = new double[day_long];
+        String[] date = new String[day_long];
+        JSONObject jsonObject=new JSONObject();
+        JSONObject jsonObject_res=new JSONObject();
+        Statement statement = conn.createStatement();
+        Statement statement1 = conn.createStatement();
+        String sql_str = "SELECT 代码,相似度 FROM `filtered_stocks` WHERE `相似度` IS NOT NULL order by `相似度` asc limit 20";
+        ResultSet resultSet = statement.executeQuery(sql_str);
+        int ii=-1;
+        while (resultSet.next()) {
+            ii++;
+            if (ii >= 0 && ii < 5) {
+                String stockname = resultSet.getString("代码");
+                sql_str = "SELECT code,results FROM ansys_results WHERE code = '" + stockname + "'";
+                ResultSet resultSet1 = statement1.executeQuery(sql_str);
+                String similarity_str = null;
+            for(int i=day_long-1;i>=0;i--) {
+
+                    jsonObject = his_ansys(stockname, i, 0);
+                    similarity_vol[day_long-1 - i] = Double.parseDouble(jsonObject.get("similarity_vol").toString());
+                    date[day_long-1 - i] = jsonObject.get("date").toString();
+
+                }
+                if (!resultSet1.next()) {
+                    String sql_insert = "INSERT INTO ansys_results (`code`, `name` ) VALUES ('" + stockname + "','" + stockname + "')";
+                    statement1.execute(sql_insert);
+
+                } else {
+                    similarity_str = resultSet1.getString("results");
+                }
+                jsonObject_res.put("date", date);
+                jsonObject_res.put("similarity_vol", similarity_vol);
+                similarity_str = similarity_str + "," + jsonObject_res.toJSONString();
+                String sql_update = "Update ansys_results set results= '" + similarity_str + "' where code = '" + stockname + "'";
+                statement1.executeUpdate(sql_update);
+
+            }
+
+
+
+
+        }
+
+
+    }
+    private static void poc_head_stocks2() throws SQLException, IOException, InterruptedException {
+        Connection conn = DriverManager.getConnection(url, user, password);
+        int day_long=22;
+        double[] similarity_vol = new double[day_long];
+        String[] date = new String[day_long];
+        JSONObject jsonObject=new JSONObject();
+        JSONObject jsonObject_res=new JSONObject();
+        Statement statement = conn.createStatement();
+        Statement statement1 = conn.createStatement();
+        String sql_str = "SELECT 代码,相似度 FROM `filtered_stocks` WHERE `相似度` IS NOT NULL order by `相似度` asc limit 20";
+        ResultSet resultSet = statement.executeQuery(sql_str);
+        int ii=-1;
+        while (resultSet.next()) {
+            ii++;
+            if (ii >= 5 && ii < 10) {
+                String stockname = resultSet.getString("代码");
+                sql_str = "SELECT code,results FROM ansys_results WHERE code = '" + stockname + "'";
+                ResultSet resultSet1 = statement1.executeQuery(sql_str);
+                String similarity_str = null;
+                for(int i=day_long-1;i>=0;i--) {
+
+                    jsonObject = his_ansys(stockname, i, 0);
+                    similarity_vol[day_long-1 - i] = Double.parseDouble(jsonObject.get("similarity_vol").toString());
+                    date[day_long-1 - i] = jsonObject.get("date").toString();
+
+                }
+                if (!resultSet1.next()) {
+                    String sql_insert = "INSERT INTO ansys_results (`code`, `name` ) VALUES ('" + stockname + "','" + stockname + "')";
+                    statement1.execute(sql_insert);
+
+                } else {
+                    similarity_str = resultSet1.getString("results");
+                }
+                jsonObject_res.put("date", date);
+                jsonObject_res.put("similarity_vol", similarity_vol);
+                similarity_str = similarity_str + "," + jsonObject_res.toJSONString();
+                String sql_update = "Update ansys_results set results= '" + similarity_str + "' where code = '" + stockname + "'";
+                statement1.executeUpdate(sql_update);
+
+            }
+
+
+
+
+        }
+
+
+    }
+    private static void poc_head_stocks3() throws SQLException, IOException, InterruptedException {
+        Connection conn = DriverManager.getConnection(url, user, password);
+        int day_long=22;
+        double[] similarity_vol = new double[day_long];
+        String[] date = new String[day_long];
+        JSONObject jsonObject=new JSONObject();
+        JSONObject jsonObject_res=new JSONObject();
+        Statement statement = conn.createStatement();
+        Statement statement1 = conn.createStatement();
+        String sql_str = "SELECT 代码,相似度 FROM `filtered_stocks` WHERE `相似度` IS NOT NULL order by `相似度` asc limit 20";
+        ResultSet resultSet = statement.executeQuery(sql_str);
+        int ii=-1;
+        while (resultSet.next()) {
+            ii++;
+            if (ii >= 10 && ii < 15) {
+                String stockname = resultSet.getString("代码");
+                sql_str = "SELECT code,results FROM ansys_results WHERE code = '" + stockname + "'";
+                ResultSet resultSet1 = statement1.executeQuery(sql_str);
+                String similarity_str = null;
+                for(int i=day_long-1;i>=0;i--) {
+
+                    jsonObject = his_ansys(stockname, i, 0);
+                    similarity_vol[day_long-1 - i] = Double.parseDouble(jsonObject.get("similarity_vol").toString());
+                    date[day_long-1 - i] = jsonObject.get("date").toString();
+
+                }
+                if (!resultSet1.next()) {
+                    String sql_insert = "INSERT INTO ansys_results (`code`, `name` ) VALUES ('" + stockname + "','" + stockname + "')";
+                    statement1.execute(sql_insert);
+
+                } else {
+                    similarity_str = resultSet1.getString("results");
+                }
+                jsonObject_res.put("date", date);
+                jsonObject_res.put("similarity_vol", similarity_vol);
+                similarity_str = similarity_str + "," + jsonObject_res.toJSONString();
+                String sql_update = "Update ansys_results set results= '" + similarity_str + "' where code = '" + stockname + "'";
+                statement1.executeUpdate(sql_update);
+
+            }
+
+
+
+
+        }
+
+
+    }
+    private static void poc_head_stocks4() throws SQLException, IOException, InterruptedException {
+        Connection conn = DriverManager.getConnection(url, user, password);
+        int day_long=22;
+        double[] similarity_vol = new double[day_long];
+        String[] date = new String[day_long];
+        JSONObject jsonObject=new JSONObject();
+        JSONObject jsonObject_res=new JSONObject();
+        Statement statement = conn.createStatement();
+        Statement statement1 = conn.createStatement();
+        String sql_str = "SELECT 代码,相似度 FROM `filtered_stocks` WHERE `相似度` IS NOT NULL order by `相似度` asc limit 20";
+        ResultSet resultSet = statement.executeQuery(sql_str);
+        int ii=-1;
+        while (resultSet.next()) {
+            ii++;
+            if (ii >= 15 && ii < 20) {
+                String stockname = resultSet.getString("代码");
+                sql_str = "SELECT code,results FROM ansys_results WHERE code = '" + stockname + "'";
+                ResultSet resultSet1 = statement1.executeQuery(sql_str);
+                String similarity_str = null;
+                for(int i=day_long-1;i>=0;i--) {
+
+                    jsonObject = his_ansys(stockname, i, 0);
+                    similarity_vol[day_long-1 - i] = Double.parseDouble(jsonObject.get("similarity_vol").toString());
+                    date[day_long-1 - i] = jsonObject.get("date").toString();
+
+                }
+                if (!resultSet1.next()) {
+                    String sql_insert = "INSERT INTO ansys_results (`code`, `name` ) VALUES ('" + stockname + "','" + stockname + "')";
+                    statement1.execute(sql_insert);
+
+                } else {
+                    similarity_str = resultSet1.getString("results");
+                }
+                jsonObject_res.put("date", date);
+                jsonObject_res.put("similarity_vol", similarity_vol);
+                similarity_str = similarity_str + "," + jsonObject_res.toJSONString();
+                String sql_update = "Update ansys_results set results= '" + similarity_str + "' where code = '" + stockname + "'";
+                statement1.executeUpdate(sql_update);
+
+            }
+
+
+
+
+        }
+
+
+    }
 
 
 
