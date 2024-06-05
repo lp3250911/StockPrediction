@@ -82,9 +82,12 @@ def append_stocks():
     cur1.execute(sql_str)
     conn1.commit()
     rows = cur1.fetchall()
+
     for row in rows:
         stockname=row[0]
+
         if stockname.isdigit():
+            # board_info = ak.(stock=stockname)
             stockname=row[0]
             cur2 = conn2.cursor()
             sel_sql="select * from `"+stockname+"` order by 日期 desc limit 1"
@@ -93,7 +96,7 @@ def append_stocks():
             lasttime=cur2.fetchall()
             for lt in lasttime:
                 last_day=lt[1]
-                bkgn=lt[12]
+                bkgn=''
                 code=lt[13]
                 name=lt[14]
             date_str = last_day.strftime("%Y-%m-%d")
@@ -180,7 +183,7 @@ def getallstocks():
     for index,row in filtered_stocks.iterrows():
         code_str=row["代码"][2:]
         name_str=row["名称"]
-        stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol=code_str, period="daily", start_date="20210101", end_date='20240530', adjust="")
+        stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol=code_str, period="daily", start_date="20210101", end_date='20250530', adjust="")
         stock_zh_a_hist_df['板块概念']=''
         stock_zh_a_hist_df['代码']=code_str
         stock_zh_a_hist_df['名称']=name_str
@@ -191,5 +194,8 @@ def getallstocks():
 
 
 if __name__ == '__main__':
+
+    # append_stocks()
+    # getallstocks()
     head_stocks_find()
     print("have done")

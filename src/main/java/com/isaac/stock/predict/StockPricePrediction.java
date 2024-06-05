@@ -58,8 +58,8 @@ public class StockPricePrediction implements Runnable  {
         public void run() {
             // 线程1的业务逻辑
             try {
-//                make_model();
-                poc_head_stocks1();
+                make_model();
+//                poc_head_stocks1();
             } catch (SQLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -75,8 +75,8 @@ public class StockPricePrediction implements Runnable  {
         public void run() {
             // 线程2的业务逻辑
             try {
-//                make_model2();
-                poc_head_stocks2();
+                make_model2();
+//                poc_head_stocks2();
             } catch (SQLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -92,8 +92,8 @@ public class StockPricePrediction implements Runnable  {
         public void run() {
             // 线程3的业务逻辑
             try {
-//                make_model3();
-                poc_head_stocks3();
+                make_model3();
+//                poc_head_stocks3();
             } catch (SQLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -109,8 +109,8 @@ public class StockPricePrediction implements Runnable  {
         public void run() {
             // 线程3的业务逻辑
             try {
-//                make_model4();
-                poc_head_stocks4();
+                make_model4();
+//                poc_head_stocks4();
             } catch (SQLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -392,7 +392,7 @@ public class StockPricePrediction implements Runnable  {
         while (resultSet.next()) {
             ii++;
             String stockname = resultSet.getString("代码");
-            if (ii > 432 && ii <= 433 && stockname.chars().allMatch(Character::isDigit)) {
+            if (ii >=0 && ii <= 100 && stockname.chars().allMatch(Character::isDigit)) {
                 sql_str = "SELECT code,similarity FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
                 String similarity_str = null;
@@ -447,7 +447,7 @@ public class StockPricePrediction implements Runnable  {
         while (resultSet.next()) {
             ii++;
             String stockname = resultSet.getString("代码");
-            if (ii > 533 && ii <= 534 && stockname.chars().allMatch(Character::isDigit) ) {
+            if (ii > 100 && ii <= 200 && stockname.chars().allMatch(Character::isDigit) ) {
 
                 sql_str = "SELECT code,similarity FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
@@ -502,7 +502,7 @@ public class StockPricePrediction implements Runnable  {
         while (resultSet.next()) {
             ii++;
             String stockname = resultSet.getString("代码");
-            if (ii > 596 && ii<=600 && stockname.chars().allMatch(Character::isDigit)) {
+            if (ii > 200 && ii<=300 && stockname.chars().allMatch(Character::isDigit)) {
 
                 sql_str = "SELECT code,similarity FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
@@ -560,7 +560,7 @@ public class StockPricePrediction implements Runnable  {
         while (resultSet.next()) {
             ii++;
             String stockname = resultSet.getString("代码");
-            if (ii > 497 && ii<=500 && stockname.chars().allMatch(Character::isDigit)) {
+            if (ii > 350 && ii<=400 && stockname.chars().allMatch(Character::isDigit)) {
 
                 sql_str = "SELECT code,similarity FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
@@ -619,7 +619,7 @@ public class StockPricePrediction implements Runnable  {
         int ii=-1;
         while (resultSet.next()) {
             ii++;
-            if (ii >= 0 && ii < 5) {
+            if (ii >300 && ii < 400) {
                 String stockname = resultSet.getString("代码");
                 sql_str = "SELECT code,results FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
@@ -667,7 +667,7 @@ public class StockPricePrediction implements Runnable  {
         int ii=-1;
         while (resultSet.next()) {
             ii++;
-            if (ii >= 5 && ii < 10) {
+            if (ii >= 3 && ii < 6) {
                 String stockname = resultSet.getString("代码");
                 sql_str = "SELECT code,results FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
@@ -715,7 +715,7 @@ public class StockPricePrediction implements Runnable  {
         int ii=-1;
         while (resultSet.next()) {
             ii++;
-            if (ii >= 10 && ii < 15) {
+            if (ii >= 6 && ii < 9) {
                 String stockname = resultSet.getString("代码");
                 sql_str = "SELECT code,results FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
@@ -763,7 +763,7 @@ public class StockPricePrediction implements Runnable  {
         int ii=-1;
         while (resultSet.next()) {
             ii++;
-            if (ii >= 15 && ii < 20) {
+            if (ii >= 9 && ii < 12) {
                 String stockname = resultSet.getString("代码");
                 sql_str = "SELECT code,results FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
