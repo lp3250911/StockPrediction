@@ -392,7 +392,7 @@ public class StockPricePrediction implements Runnable  {
         while (resultSet.next()) {
             ii++;
             String stockname = resultSet.getString("代码");
-            if (ii >=0 && ii <= 100 && stockname.chars().allMatch(Character::isDigit)) {
+            if (ii >=0 && ii <= 70 && stockname.chars().allMatch(Character::isDigit)) {
                 sql_str = "SELECT code,similarity FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
                 String similarity_str = null;
@@ -447,7 +447,7 @@ public class StockPricePrediction implements Runnable  {
         while (resultSet.next()) {
             ii++;
             String stockname = resultSet.getString("代码");
-            if (ii > 100 && ii <= 200 && stockname.chars().allMatch(Character::isDigit) ) {
+            if (ii > 70 && ii <= 140 && stockname.chars().allMatch(Character::isDigit) ) {
 
                 sql_str = "SELECT code,similarity FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
@@ -502,7 +502,7 @@ public class StockPricePrediction implements Runnable  {
         while (resultSet.next()) {
             ii++;
             String stockname = resultSet.getString("代码");
-            if (ii > 200 && ii<=300 && stockname.chars().allMatch(Character::isDigit)) {
+            if (ii > 140 && ii<=210 && stockname.chars().allMatch(Character::isDigit)) {
 
                 sql_str = "SELECT code,similarity FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
@@ -560,7 +560,7 @@ public class StockPricePrediction implements Runnable  {
         while (resultSet.next()) {
             ii++;
             String stockname = resultSet.getString("代码");
-            if (ii > 350 && ii<=400 && stockname.chars().allMatch(Character::isDigit)) {
+            if (ii > 210 && ii<=280 && stockname.chars().allMatch(Character::isDigit)) {
 
                 sql_str = "SELECT code,similarity FROM ansys_results WHERE code = '" + stockname + "'";
                 ResultSet resultSet1 = statement1.executeQuery(sql_str);
